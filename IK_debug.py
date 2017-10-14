@@ -63,7 +63,83 @@ def test_code(test_case):
     ## 
 
     ## Insert IK code here!
+
+    # Define symbols for joint variables and orientation
+    q1, q2, q3, q4, q5, q6, q7 = symbols('q1:8')
+    d1, d2, d3, d4, d5, d6, d7 = symbols('d1:8')
+    a0, a1, a2, a3, a4, a5, a6 = symbols('a0:7')
+    alpha0, alpha1, alpha2, alpha3, alpha4, alpha5, alpha6 = symbols('alpha0:7')
+    roll, pitch, yaw = symbols('roll pitch yaw')
+
+    # Define modified DH parameters
+    s = {alpha0:  0,         a0:  0,         d1: 0.75,    q1: q1,
+         alpha1: -1*pi/2.,   a1:  0.35,      d2: 0,       q2: q2-pi/2.,
+         alpha2:  0,         a2:  1.25,      d3: 0,       q3: q3,
+         alpha3: -1*pi/2.,   a3: -0.054,     d4: 1.5,     q4: q4,
+         alpha4:  pi/2.,     a4:  0,         d5: 0,       q5: q5,
+         alpha5: -1*pi/2.,   a5:  0,         d6: 0.303,   q6: q6,
+         alpha6:  0,         a6:  0,         d7: 0,       q7: 0 }
+
+    # Define Modified DH Transformation matrix
+    def transf_matrix(alpha, a, d, q):
+        tm = Matrix([[            cos(q),           -sin(q),          0,                a],
+                     [ sin(q)*cos(alpha), cos(q)*cos(alpha),  -sin(alpha),  -sin(alpha)*d],
+                     [ sin(q)*sin(alpha), cos(q)*sin(alpha),   cos(alpha),   cos(alpha)*d],
+                     [                 0,                 0,            0,              1]])
+        return tm
+
+    # Create individual transformation matrices
+    T0_1 = transf_matrix(alpha0, a0, d1, q1).subs(s)
+    T1_2 = transf_matrix(alpha1, a1, d2, q2).subs(s)
+    T2_3 = transf_matrix(alpha2, a2, d3, q3).subs(s)
+    T3_4 = transf_matrix(alpha3, a3, d4, q4).subs(s)
+    T4_5 = transf_matrix(alpha4, a4, d5, q5).subs(s)
+    T5_6 = transf_matrix(alpha5, a5, d6, q6).subs(s)
+    T6_7 = transf_matrix(alpha6, a6, d7, q7).subs(s)
+
+    # Transform from base link to end effector
+    T0_7 = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_7
+    R0_3 = (T0_1 * T1_2 * T2_3)[0:2, 0:2]
+
+    # Extract rotation matrices from the transformation matrices
+
+    # Define total rotation matrix
+    def rot_z(angle):
+        return Matrix([[ cos(angle),     -sin(angle),    0 ],
+                       [ sin(angle),      cos(angle),    0 ],
+                       [    0,             0,            1 ]])
+    def rot_y(angle):
+        return Matrix([[ cos(angle),     0,     sin(angle) ],
+                       [     0,          1,          0     ],
+                       [-sin(angle),     0,     cos(angle) ]])
+    def rot_x(angle):
+        return Matrix([[ 1,            0,            0       ],
+                       [ 0,        cos(angle),   -sin(angle) ],
+                       [ 0,        sin(angle),    cos(angle) ]])
+
+    R_corr = rot_z(pi) * rot_y(-pi/2.)
+    Rrpy = rot_z(yaw) * rot_y(pitch) * rot_x(roll) * R_corr
     
+    # IK code starts here
+
+    # Extract end-effector position and orientation from request
+    # px,py,pz = end-effector position
+    # roll, pitch, yaw = end-effector orientation
+    px = req.poses[x].position.x
+    py = req.poses[x].position.y
+    pz = req.poses[x].position.z
+
+    (roll_ee, pitch_ee, yaw_ee) = tf.transformations.euler_from_quaternion(
+        [req.poses[x].orientation.x, req.poses[x].orientation.y,
+            req.poses[x].orientation.z, req.poses[x].orientation.w])
+
+    ### Your IK code here 
+    # Compensate for rotation discrepancy between DH parameters and Gazebo
+    r = Rrpy.evalf(subs={roll: roll_ee, yaw: yaw_ee, pitch: pitch_ee})
+
+    wx = px - s[d6]*r[0, 2]
+    wy = py - s[d6]*r[1, 2]
+    wz = pz - s[d6]*r[2, 2]
     theta1 = 0
     theta2 = 0
     theta3 = 0
@@ -84,7 +160,7 @@ def test_code(test_case):
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
-    your_wc = [1,1,1] # <--- Load your calculated WC values in this array
+    your_wc = [wx, wy, wz] # <--- Load your calculated WC values in this array
     your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
     ########################################################################################
 
