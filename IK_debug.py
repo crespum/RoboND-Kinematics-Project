@@ -99,7 +99,7 @@ def test_code(test_case):
 
     # Transform from base link to end effector
     T0_7 = T0_1 * T1_2 * T2_3 * T3_4 * T4_5 * T5_6 * T6_7
-    R0_3 = (T0_1 * T1_2 * T2_3)[0:2, 0:2]
+    R0_3 = (T0_1 * T1_2 * T2_3)[0:3, 0:3]
 
     # Extract rotation matrices from the transformation matrices
 
@@ -135,30 +135,35 @@ def test_code(test_case):
 
     ### Your IK code here 
     # Compensate for rotation discrepancy between DH parameters and Gazebo
-    r = Rrpy.evalf(subs={roll: roll_ee, yaw: yaw_ee, pitch: pitch_ee})
+    Rrpy_val = Rrpy.evalf(subs={roll: roll_ee, yaw: yaw_ee, pitch: pitch_ee})
 
-    wx = px - s[d6]*r[0, 2]
-    wy = py - s[d6]*r[1, 2]
-    wz = pz - s[d6]*r[2, 2]
+    wx = px - s[d6]*Rrpy_val[0, 2]
+    wy = py - s[d6]*Rrpy_val[1, 2]
+    wz = pz - s[d6]*Rrpy_val[2, 2]
 
-    # Calculate joint angles using Geometric IK method
-    #R3_6 = R0_3.inv("LU") * r
-
-    wzp = wz - 0.75
-    wxyp = sqrt(pow(wx, 2) + pow(wy, 2))- 0.35
+    # Calculate ARM joint angles using Geometric IK method
+    wzp = wz - s[d1]
+    wxyp = sqrt(pow(wx, 2) + pow(wy, 2)) - s[a1]
     gamma = atan2(wzp, wxyp)
-    C = 1.25
-    B = sqrt(pow(wxyp, 2) + pow(wzp, 2))
-    A = sqrt(pow(1.5, 2) + pow(0.054, 2))
-    a = acos((pow(B, 2) + pow(C, 2) - pow(A, 2))/(2*B*C))
+    delta = atan2(abs(s[a3]), s[d4])
 
+    C = s[a2]
+    B = sqrt(pow(wxyp, 2) + pow(wzp, 2))
+    A = sqrt(pow(s[d4], 2) + pow(abs(s[a3]), 2))
+    a = acos((pow(B, 2) + pow(C, 2) - pow(A, 2))/(2*B*C))
+    b = acos((pow(A, 2) + pow(C, 2) - pow(B, 2))/(2*A*C))
 
     theta1 = atan2(wy, wx)
     theta2 = pi/2. - a - gamma
-    theta3 = 0
-    theta4 = 0
-    theta5 = 0
-    theta6 = 0
+    theta3 = pi/2. - b - delta
+
+    # Calculate WRIST joint angles using Geometric IK method
+    R0_3_val = R0_3.evalf(subs={q1: theta1, q2: theta2, q3: theta3})
+    R3_6_val = R0_3_val.inv("LU") * Rrpy_val
+    
+    theta4 = atan2(R3_6_val[2, 2], -R3_6_val[0, 2])
+    theta5 = atan2(sqrt(pow(R3_6_val[0, 2], 2) + pow(R3_6_val[2, 2], 2)), R3_6_val[1, 2])
+    theta6 = atan2(-R3_6_val[1, 1], R3_6_val[1, 0])
 
     ## 
     ########################################################################################
