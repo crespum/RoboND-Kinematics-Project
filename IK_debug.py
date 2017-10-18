@@ -172,14 +172,17 @@ def test_code(test_case):
     ## For additional debugging add your forward kinematics here. Use your previously calculated thetas
     ## as the input and output the position of your end effector as your_ee = [x,y,z]
 
-    ## (OPTIONAL) YOUR CODE HERE!
+    T0_7_val = T0_7.evalf(subs={q1: theta1, q2: theta2, q3: theta3, q4: theta4, q5: theta5, q6:theta6})
+    eex = T0_7_val[0, 3]
+    eey = T0_7_val[1, 3]
+    eez = T0_7_val[2, 3]
 
     ## End your code input for forward kinematics here!
     ########################################################################################
 
     ## For error analysis please set the following variables of your WC location and EE location in the format of [x,y,z]
     your_wc = [wx, wy, wz] # <--- Load your calculated WC values in this array
-    your_ee = [1,1,1] # <--- Load your calculated end effector value from your forward kinematics
+    your_ee = [eex, eey, eez] # <--- Load your calculated end effector value from your forward kinematics
     ########################################################################################
 
     ## Error analysis
@@ -230,6 +233,5 @@ def test_code(test_case):
 
 if __name__ == "__main__":
     # Change test case number for different scenarios
-    test_case_number = 1
-
-    test_code(test_cases[test_case_number])
+    for test_case_number in range(1,4):
+        test_code(test_cases[test_case_number])
