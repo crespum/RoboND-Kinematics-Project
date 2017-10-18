@@ -140,8 +140,21 @@ def test_code(test_case):
     wx = px - s[d6]*r[0, 2]
     wy = py - s[d6]*r[1, 2]
     wz = pz - s[d6]*r[2, 2]
-    theta1 = 0
-    theta2 = 0
+
+    # Calculate joint angles using Geometric IK method
+    #R3_6 = R0_3.inv("LU") * r
+
+    wzp = wz - 0.75
+    wxyp = sqrt(pow(wx, 2) + pow(wy, 2))- 0.35
+    gamma = atan2(wzp, wxyp)
+    C = 1.25
+    B = sqrt(pow(wxyp, 2) + pow(wzp, 2))
+    A = sqrt(pow(1.5, 2) + pow(0.054, 2))
+    a = acos((pow(B, 2) + pow(C, 2) - pow(A, 2))/(2*B*C))
+
+
+    theta1 = atan2(wy, wx)
+    theta2 = pi/2. - a - gamma
     theta3 = 0
     theta4 = 0
     theta5 = 0
