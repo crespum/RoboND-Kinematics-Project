@@ -77,8 +77,8 @@ def test_code(test_case):
          alpha2:  0,         a2:  1.25,      d3: 0,       q3: q3,
          alpha3: -1*pi/2.,   a3: -0.054,     d4: 1.5,     q4: q4,
          alpha4:  pi/2.,     a4:  0,         d5: 0,       q5: q5,
-         alpha5: -1*pi/2.,   a5:  0,         d6: 0.303,   q6: q6,
-         alpha6:  0,         a6:  0,         d7: 0,       q7: 0 }
+         alpha5: -1*pi/2.,   a5:  0,         d6: 0,       q6: q6,
+         alpha6:  0,         a6:  0,         d7: 0.303,   q7: 0 }
 
     # Define Modified DH Transformation matrix
     def transf_matrix(alpha, a, d, q):
@@ -137,9 +137,9 @@ def test_code(test_case):
     # Compensate for rotation discrepancy between DH parameters and Gazebo
     Rrpy_val = Rrpy.evalf(subs={roll: roll_ee, yaw: yaw_ee, pitch: pitch_ee})
 
-    wx = px - s[d6]*Rrpy_val[0, 2]
-    wy = py - s[d6]*Rrpy_val[1, 2]
-    wz = pz - s[d6]*Rrpy_val[2, 2]
+    wx = px - s[d7]*Rrpy_val[0, 2]
+    wy = py - s[d7]*Rrpy_val[1, 2]
+    wz = pz - s[d7]*Rrpy_val[2, 2]
 
     # Calculate ARM joint angles using Geometric IK method
     wzp = wz - s[d1]
