@@ -159,7 +159,7 @@ def test_code(test_case):
 
     # Calculate WRIST joint angles using Geometric IK method
     R0_3_val = R0_3.evalf(subs={q1: theta1, q2: theta2, q3: theta3})
-    R3_6_val = R0_3_val.inv("LU") * Rrpy_val
+    R3_6_val = R0_3_val.transpose() * Rrpy_val
     
     theta4 = atan2(R3_6_val[2, 2], -R3_6_val[0, 2])
     theta5 = atan2(sqrt(pow(R3_6_val[0, 2], 2) + pow(R3_6_val[2, 2], 2)), R3_6_val[1, 2])
